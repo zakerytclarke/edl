@@ -1,0 +1,11 @@
+temp<-0
+
+temp<->port1
+
+
+true:
+  temp++
+
+
+temp>85:
+  temp--

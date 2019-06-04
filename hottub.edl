@@ -1,0 +1,30 @@
+temp<->port1
+desiredTemp<-85
+
+hot<->port2
+cold<->port3
+
+height<->port4
+
+
+dispenseHot:
+  hot<-on
+  wait<-400
+  hot<-off
+
+dispenseCold:
+  cold<-on
+  wait<-400
+  cold<-off
+
+
+temp>desiredTemp:
+  dispenseCold<-on
+
+temp<desiredTemp:
+  dispenseHot<-on
+
+
+height=on:
+  dispenseHot <- off
+  dispenseCold <- off
