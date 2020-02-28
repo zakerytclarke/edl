@@ -1,0 +1,78 @@
+document.getElementById("1").innerHTML<<b1
+document.getElementById("2").innerHTML<<b2
+document.getElementById("3").innerHTML<<b3
+document.getElementById("4").innerHTML<<b4
+document.getElementById("5").innerHTML<<b5
+document.getElementById("6").innerHTML<<b6
+document.getElementById("7").innerHTML<<b7
+document.getElementById("8").innerHTML<<b8
+document.getElementById("9").innerHTML<<b9
+
+b1<-_
+b2<-_
+b3<-_
+b4<-_
+b5<-_
+b6<-_
+b7<-_
+b8<-_
+b9<-_
+
+win<-null
+
+win!=null:
+  document.getElementById("msg")=turn+' Wins!'
+
+turn<-x
+
+//Move Functions
+playb1&b1=_:
+  b1=turn
+
+playb2&b2=_:
+  b2=turn
+
+playb3&b3=_:
+  b3=turn
+
+playb4&b4=_:
+  b4=turn
+
+playb5&b5=_:
+  b5=turn
+
+playb6&b6=_:
+  b6=turn
+
+playb7&b7=_:
+  b7=turn
+
+playb8&b8=_:
+  b8=turn
+
+playb9&b9=_:
+  b9=turn
+
+
+//Check wins
+//Horizontal
+b1=b2&b2=b3&b1!=_:
+  win<-on
+b4=b5&b5=b6&b4!=_:
+  win<-on
+b7=b8&b8=b9&b7!=_:
+  win<-on
+
+//Vertical
+b1=b4&b4=b7&b1!=_:
+  win<-on
+b2=b5&b5=b8&b2!=_:
+  win<-on
+b3=b6&b6=b9&b3!=_:
+  win<-on
+
+//Diagonal
+b1=b5&b5=b9&b1!=_:
+  win<-on
+b3=b5&b5=b7&b3!=_:
+  win<-on

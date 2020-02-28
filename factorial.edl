@@ -1,0 +1,21 @@
+
+factorialDone<-false
+factorialCurrent<-0
+
+
+factorialInput<-10
+factorial<-on
+
+factorial&factorialCurrent=0:
+  factorialCurrent<-factorialInput
+  factorialAcc<-1
+
+
+factorial&factorialCurrent!=0:
+  factorialAcc<-factorialAcc*factorialCurrent
+  factorialCurrent<-factorialCurrent-1
+
+factorial&factorialCurrent<=1:
+
+
+factorialInput

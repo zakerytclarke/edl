@@ -1,213 +1,190 @@
-var fs = require('fs');
-
-
-var mappings=[["temp","port1"],["hot","port2"],["cold","port3"],["height","port4"]];
-var triggers=[["dispenseHot"],["dispenseCold"],["temp","desiredTemp",">"],["temp","desiredTemp","<"],["height","on","="]];
-var events=[["hot","on","<-","wait","400","<-","hot","off","<-"],["cold","on","<-","wait","400","<-","cold","off","<-"],["dispenseCold","on","<-"],["dispenseHot","on","<-"],[["dispenseCold","off","<-"],["dispenseHot","off","<-"]]];
-var state={
-  desiredTemp:85,
-  dispenseHot:false,
-  dispenseCold:false,
-  temp:null,
-  height:null,
-  hot:null,
-  cold:null,
-  end:false
-};
-
-var commands=[];
-
-
-  //parse();
+//var prgm=["*","<-",7,"<-","+","<-",2,"<-",3];
+//var prgm=["id","<-",7];
+var prgm=["fact","<-",5];
 
 
 
-var symbols=["->","<-","<->","\n","\t","=","!=","&",">","<","+","-","*","/","(",")",":"];
-symbols.sort(function(a,b){
-  if(a.length>b.length){
-    return -1;
-  }else{
-    return 1;
-  }
+var definitions=[
+  //Operators
+  {
+    value:["+","<-","x","<-","y"],
+    substitution:function(args){
+      return [args[2]+args[4]];
+    }
+  },
+  {
+    value:["*","<-","x","<-","y"],
+    substitution:function(args){
+      return [args[2]*args[4]];
+    }
+  },
+  {
+    value:["-","<-","x","<-","y"],
+    substitution:function(args){
+      return [args[2]-args[4]];
+    }
+  },
+  {
+    value:["/","<-","x","<-","y"],
+    substitution:function(args){
+      return [args[2]/args[4]];
+    }
+  },
+  {
+    value:["^","<-","x","<-","y"],
+    substitution:function(args){
+      return [Math.pow(args[2],args[4])];
+    }
+  },
+  {
+    value:["&&","<-","x","<-","y"],
+    substitution:function(args){
+      return [args[2]&&args[4]];
+    }
+  },
+  {
+    value:["||","<-","x","<-","y"],
+    substitution:function(args){
+      return [args[2]||args[4]];
+    }
+  },
+  //Functions
+  {
+    value:["id","<-","x"],
+    substitution:["x"]
+  },
+  {
+    value:["fact","<-",1],
+    substitution:[1]
+  },
+  {
+    value:["fact","<-","n"],
+    substitution:["*","<-","n","<-","fact","<-","-","<-","n","<-",1]
+  },
+
+
+]
+
+var operators=definitions.filter(function(x){
+  return true;
+  //return (x.substitution.constructor===Function);
+}).map(function(x){
+  return x.value[0];
+});
+operators.push("<-");
+operators.push("->");
+
+definitions=definitions.sort(function(x,y){//Sort so shortest first
+  return x.value.length-y.value.length;
 });
 
 
-run();
-
-function run(){
-  //while(state.end!=true){
-    //Evaluate Events
-    for(var i=0;i<triggers.length;i++){
-      if(evaluate(triggers[i])){
-        evaluate(events[i]);
-      }
-    }
-    console.log(state);
-
-  //}
-
-}
+evaluate(prgm);
 
 
+function evaluate(prgm){
+  var ptr=0;
+  console.log(prgm);
+  while(ptr<prgm.length){//Starting from left search all parts of prgm
+    for(var i=0;i<definitions.length;i++){
+      if(compare(definitions[i].value,prgm,ptr)){
+        if(definitions[i].substitution.constructor===Function){//Function
+          var args=[];
+          for(var j=0;j<definitions[i].value.length;j++){
+            args.push(prgm[ptr]);//Add args
+            prgm.splice(ptr,1);
+          }
+          var result=definitions[i].substitution(args);
+          var tempArr=prgm.slice(ptr);
+          var beginArr=prgm.slice(0,ptr);
 
-function parse(){
-  var code=fs.readFileSync("hottub.edl","utf8");
-
-
-  var tokens=[];
-  var tokens=["temp","<->","port1","\n","desiredTemp","<-","85","\n","hot","<->","port2","\n","cold","<->","port3","\n","height","<->","port4","\n","dispenseHot",":","\n","hot","<-","on","\n","wait","<-","400","\n","hot","<-","off","\n","dispenseCold",":","\n","cold","<-","on","\n","wait","<-","400","\n","cold","<-","off","\n","temp",">","desiredTemp",":","\n","dispenseCold","<-","on","\n","temp","<","desiredTemp",":","\n","dispenseHot","<-","on","\n","height","=","on",":","\n","dispenseHot","<-","off","\n","dispenseCold","<-","off"];
-
-
-
-/*
-  var buffer="";
-
-  for(var i=0;i<code.length;i++){
-    var bool=null;
-    for(var j=0;j<symbols.length;j++){
-      var temp=code.substr(i,symbols[j].length);
-      if(temp=symbols[j]){
-        bool=symbols[j];
-      }
-      if(bool){
-        tokens.push(buffer);
-        tokens.push(bool);
-      }else{
-        buffer+=code.substr(i,1);
-        console.log(buffer);
-      }
-    }
-
-  }
-
-*/
+          prgm=beginArr.concat(result.concat(tempArr));
+        }else{
+          var args=[];
+          for(var j=0;j<definitions[i].value.length;j++){
+            args.push(prgm[ptr]);//Add args
+            prgm.splice(ptr,1);
+          }
 
 
-  console.log(tokens);
+          var tempDef={};//Temporary Definitions
+          for(var j=0;j<definitions[i].value.length;j++){
+            if(isFreeVariable(definitions[i].value[j])&&!operators.includes(definitions[i].value[j])){
+              tempDef[definitions[i].value[j]]=args[j];
+            }
+          }
 
-}
+          var result=definitions[i].substitution;
 
+          for(var i=0;i<result.length;i++){
+            if(tempDef[result[i]]){
+              result[i]=tempDef[result[i]]
+            }
+          }
 
+          var tempArr=prgm.slice(ptr);
+          var beginArr=prgm.slice(0,ptr);
 
-
-function evaluate(expr){
-  var stack=[];
-  expr=expr.reverse();
-
-  while(expr.length>0){
-    var temp=expr.pop();
-
-    if(isState(temp)){
-      stack.push(state[temp]);
-    }else{
-      if(isSymbol(temp)){
-
-        switch(temp) {
-          case "->":
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            states[arg1]=arg2;
-          break;
-          case "<-":
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            states[arg2]=arg1;
-          break;
-          case "<->":
-          break;
-          case "=":
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1==arg2);
-          break;
-          case "!=":
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1!=arg2);
-          break;
-          case "!":
-            var arg=stack.pop();
-            stack.push(!arg);
-          break;
-          case "<":
-
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1<arg2);
-          break;
-          case ">":
-
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1<arg2);
-          break;
-          case "<=":
-
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1<=arg2);
-          break;
-          case ">=":
-
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1>=arg2);
-          break;
-          case "+":
-
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1+arg2);
-          break;
-          case "-":
-
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1-arg2);
-          break;
-          case "*":
-
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1*arg2);
-          break;
-          case "/":
-
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1/arg2);
-          break;
-          case "&":
-
-            var arg1=stack.pop();
-            var arg2=stack.pop();
-            stack.push(arg1&&arg2);
-          break;
-          default:
+          prgm=beginArr.concat(result.concat(tempArr));
 
         }
-      }else{
-        stack.push(temp);
+        console.log(prgm);
+        //Set pointer back to start
+        ptr=-1;
       }
     }
-
+    ptr++;
   }
-  return stack[0];
 
 
-  function isSymbol(str){
-    for(var i=0;i<symbols.length;i++){
-      if(symbols[i]==str){
-          return true;
+}
+
+/**
+ *
+ * a1- smaller array for exact match
+ * a2- large array to find subset of
+ */
+function compare(a1,a2,offset){
+  for(var i=0;i<a1.length;i++){
+    var temp=a2[i+offset];
+    if(operators.includes(temp)||operators.includes(a1[i])){//Operators must be strictly equal
+      if(temp!=a1[i]){
+        return false;
       }
     }
-    return false;
-  }
-  function isState(str){
-    if(state[str]!=null){
-      return true;
-    }else{
-      return false;
+    if(!isFreeVariable(a1[i])){//Free Variables can be any value
+      if(temp!=a1[i]){
+        return false;
+      }
     }
   }
+  return true;
+}
+
+/**
+ *
+ * a1- array of values to substitute as
+ * a2- array to substitute into
+ */
+function substitute(a1,a2){
+  var out=[];
+  for(var i=0;i<a1.length;i++){
+
+  }
+}
+
+
+
+function isFreeVariable(str){
+  if(str.constructor===String){
+
+    for(var i=0;i<definitions.length;i++){
+      if(definitions[i].value[0]==str){
+        return false;
+      }
+    }
+    return true;//Variable not already accounted for
+  }
+
+  return false;
 }

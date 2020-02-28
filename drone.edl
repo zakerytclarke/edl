@@ -1,0 +1,67 @@
+//Motors
+FL>>port1
+FR>>port2
+BL>>port3
+BR>>port4
+
+//Gyroscope
+gyroFB<<port5
+gyroLR<<port6
+
+//Drone Layout
+//  __     __
+// |FL|   |FR|
+//   \\___//
+//   |  +  |
+//   |- G +|
+//   |__-__|
+//  //     \\
+//|BL|     |BR|
+
+
+true:
+  FL<-10
+  FR<-10
+  BL<-10
+  BR<-10
+
+gyroFB>1
+  FL=FL+0.1
+  FR=FR+0.1
+  BL=BL-0.1
+  BR=BR-0.1
+
+gyroFB<1
+  FL=FL-0.1
+  FR=FR-0.1
+  BL=BL+0.1
+  BR=BR+0.1
+
+gyroLR<1
+  FL=FL+0.1
+  FR=FR-0.1
+  BL=BL+0.1
+  BR=BR-0.1
+
+gyroLR>1
+  FL=FL-0.1
+  FR=FR+0.1
+  BL=BL-0.1
+  BR=BR+0.1
+
+
+forward:
+  BL<-20
+  BR<-20
+
+backward:
+  FL<-20
+  FR<-20
+
+right:
+  FL<-20
+  BL<-20
+
+left:
+  FR<-20
+  BR<-20

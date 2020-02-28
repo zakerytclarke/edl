@@ -1,0 +1,54 @@
+seed<-0
+chicken<-0
+fox<-0
+farmer<-0
+
+
+possibleMoves<-{moveFarmer,moveSeed,moveChicken,moveFox}
+
+moveFarmer && farmer=0 ->
+  farmer<-1
+
+moveFarmer && seed=1 ->
+  farmer<-1
+
+moveSeed && seed=0 ->
+  seed<-1
+  moveFarmer
+
+moveSeed && seed=1 ->
+  seed<-0
+  moveFarmer
+
+moveChicken && chicken=0 ->
+  chicken<-1
+  moveFarmer
+
+moveChicken && seed=1 ->
+  seed<-0
+  moveFarmer
+
+
+
+listOfMoves()
+
+
+
+//Constraints
+farmer!=seed=chicken //Cant leave seed and chicken alone
+farmer!=chicken=fox //Cant leave fox and chicken alone
+
+
+
+s
+f
+c
+F
+
+movechicken
+movefarmer
+movefox
+moveChicken
+moveSeed
+moveNothing
+moveChicken
